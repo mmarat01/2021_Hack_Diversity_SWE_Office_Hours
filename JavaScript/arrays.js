@@ -1,169 +1,129 @@
-// By: Erica Kangas //
-
 /**
- * Pairs of Socks
- * 
- * Given an array of socks (integers), find the number of pairs of socks
- * 
- * Example: input -> [5, 25, 5, 10, 15, 5, 10] | output -> 2
+ * Maximum No. Tickets Purchasable
+
+Given an array of concert ticket prices and a target budget, find the maximum number of tickets that can be purchased without exceeding the target budget.
+
+Example: input -> [10, 25, 30, 40], 90 | output -> 3
  */
 
-function pairsOfSocks(array) {
+function maxTicketsPurchasable(ticketPrices, budget) {
   // taking care of edge cases
-  if (array.length === 0) {
+  if (ticketPrices.length === 0 || budget <= 0) {
     return 0;
   }
 
-  // initialize object to track how many socks of each type we have
-  let sockTracker = {};
+  // let's rule out tickets we already know aren't w/in budget
+  let ticketPricesInBudget = [];
 
-  // iterate to organize socks by type
-  array.forEach(sock => {
-    if (!!sockTracker[sock]) {
-      sockTracker[sock] += 1;
-    } else {
-      sockTracker[sock] = 1;
+  ticketPrices.forEach(price => {
+    if (price <= budget) {
+      ticketPricesInBudget.push(price);
     }
   });
 
-  // initialize our final count of pairs of socks
-  let pairCount = 0;
+  // sort tickets so we can pull from the lowest prices upwards
+  let sortedTicketPricesInBudget = ticketPricesInBudget.sort((a, b) => a - b);
 
-  // count the number of pairs we have
-  Object.keys(sockTracker).forEach(sockType => {
-    pairCount += Math.floor(sockTracker[sockType] / 2);
-  });
+  // initialize our max ticket count
+  let maxTickets = 0;
 
-  return pairCount;
-}
+  // initialize value to track budget - don't modify the input value!
+  let budgetRemaining = budget;
 
-/**
- * Longest Range
- * 
- * Given an array, find the longest range of consecutive integers in that array
- * 
- * Example: input -> [1, 11, 3, 0, 15, 5, 2, 4, 10, 7, 12, 6] | output -> [0, 7]
- */
+  // grab as many tickets as we can until we hit the budget
+  // why use a for loop here? gives us the ability to break out of the loop so we don't unecessarily loop through values.
+  for (let i = 0; i < sortedTicketPricesInBudget.length; i++) {
+    budgetRemaining -= sortedTicketPricesInBudget[i];
 
-function longestRange(array) {
-  // taking care of edge cases
-  if (array.length <= 1) {
-    return array;
+    if (budgetRemaining < 0) {
+      break;
+    }
+
+    maxTickets += 1;
   }
 
-  // initialize set to track integers, maxRange, and final range value.
-  let set = new Set();
-  let maxRange = 0;
-  let range = [];
-
-  // convert array values to a set
-  array.forEach(int => set.add(int));
-
-  array.forEach((int, i) => {
-    // if the integer is the starting point for a sequence
-    if (set.has(int)) {
-      let nextInt = array[i];
-
-      while (set.has(nextInt)) {
-        nextInt += 1;
-      }
-
-      // get the max range value
-      maxRange = Math.max(maxRange, nextInt - int);
-
-      // if we have a new max range, track the range values
-      if (maxRange <= nextInt - int) {
-        range = [int, maxRange - 1];
-      }
-    }
-  });
-
-  return range;
+  return maxTickets;
 }
+
+// ****************************************
 
 /**
- * Sherlock and Anagrams
- * 
- * Two strings are anagrams of each other if the letters of one string can be rearranged to form the other string. Given a string, find the number of pairs of substrings of the string that are anagrams of each other
- * 
- * Example: input -> “mom” | output -> 2 ([m, m], [mo, om])
+ * Minimum Swaps
+
+Given an unsorted array of consecutive distinct integers, find the minimum number of swaps required to sort the array in ascending order.
+
+Example: input -> [1, 5, 4, 3, 7, 6, 2]  | output -> 3
  */
-function allSubstrings(str) {
-  let result = [];
 
-  [...str].forEach((_, i) => {
-    [...str].forEach((_, j) => {
-      result.push(str.slice(i, j + 1));
-    })
-  });
+function swap(i, j, array) {
+  // switch values in an array at indices i and j
+  let temp = array[i];
+  array[i] = array[j];
+  array[j] = temp;
 
-  // don't return empty strings
-  return result.filter(s => !!s);
+  return array;
 }
 
-function isAnagram(str1, str2) {
-  let charTracker = {};
+function minSwaps(array) {
+  // taking care of edge cases
+  if (array.length <= 1) {
+    return 0;
+  }
 
-  [...str1].forEach(letter => {
-    if (charTracker[letter]) {
-      charTracker[letter] += 1;
-    } else {
-      charTracker[letter] = 1;
+  // initialize count value
+  let count = 0;
+
+  // initialize array for what will be our sorted values - don't modify the input value!
+  // why use the spread operator (...)? We want to create a brand new array of values, not just point to the original array.
+  let sortedArray = [...array];
+
+  // go through the array and swap!
+  for (let i = 0; i < sortedArray.length; i++) {
+    while (sortedArray[i] !== i + 1) {
+      sortedArray = swap(i, sortedArray[i] - 1, sortedArray);
+      count += 1;
     }
-  });
+  }
 
-  let result = true;
+  return count;
+}
 
-  // use a for loop here so we can break out early
-  for (let i = 0; i < str2.length; i++) {
-    let letter = str2[i];
+// ****************************************
 
-    if (charTracker[letter]) {
-      charTracker[letter] -= 1;
-    } else {
-      result = false;
-      break;
+/**
+ * Pangrams
+
+A pangram is a string that contains every letter of the alphabet. Given a string, write a method that determines if that string is a pangram or not
+
+Example: input -> “Brown jars prevented the mixture from freezing too quickly“  | output -> true
+ */
+
+function isPangram(string) {
+  // taking care of edge cases
+  if (string.length < 26) {
+    return false;
+  }
+
+  // initialize array with 26 zeroes, each representing a letter in the alphabet
+  let array = [...new Array(26)].map(() => 0);
+
+  // initialize return value
+  let result = false;
+
+  // go through string's characters and turn array's value to 1 for the associated index (e.g. a = 0, b = 1, etc.)
+  for (let i = 0; i < string.length; i++) {
+    let character = string.charAt(i).toLowerCase();
+    let index = character.charCodeAt(0) - 'a'.charCodeAt(0);
+
+    if (index <= 25 && index >= 0) {
+      array[index] = 1;
+
+      if (array.reduce((a, b) => a + b, 0) === 26) {
+        result = true;
+        break;
+      }
     }
   }
 
   return result;
-}
-
-function countAnagrams(index, array) {
-  let str = array[index];
-  let remainingArray = array.slice(index + 1);
-  let anagramCount = 0;
-
-  remainingArray.forEach(strToCheck => {
-    if (str.length === strToCheck.length && isAnagram(str, strToCheck)) {
-      anagramCount += 1;
-    }
-  })
-
-  return anagramCount;
-}
-
-function sherlockAnagrams(str) {
-  // taking care of edge cases - no duplicate letters, no anagrams
-  let duplicateCount = str
-    .split('')
-    .filter((letter, index) => str.indexOf(letter) !== index)
-    .length
-
-  if (duplicateCount === 0) {
-    return 0;
-  }
-
-  // initialize our count value
-  let anagramCount = 0;
-
-  // get all substrings
-  let substrings = allSubstrings(str);
-
-  // count anagrams
-  substrings.forEach((substring, i) => {
-    anagramCount += countAnagrams(i, substrings)
-  });
-
-  return anagramCount;
 }
